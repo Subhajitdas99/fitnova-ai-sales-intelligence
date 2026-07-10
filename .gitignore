@@ -33,6 +33,7 @@ Thumbs.db
 # Audio uploads
 uploads/
 processed_audio/
+backend/storage/audio/
 
 # AI Models
 models/
@@ -45,3 +46,4 @@ models/
 # Build
 dist/
 build/
+backend/fitnova_ai.db
