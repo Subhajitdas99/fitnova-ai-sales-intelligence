@@ -3,6 +3,7 @@ import logging
 from backend.app.api.dependencies.services import (
     get_call_intelligence_service,
     get_diarization_service,
+    get_transcript_merge_service,
     get_transcription_service,
 )
 from backend.app.application.services.call_processing_service import CallProcessingService
@@ -22,6 +23,7 @@ def process_call_in_background(call_id: str) -> None:
             repository=repository,
             transcription_service=get_transcription_service(),
             diarization_service=get_diarization_service(),
+            transcript_merge_service=get_transcript_merge_service(),
             intelligence_service=get_call_intelligence_service(),
         )
         service.process_call(call_id)

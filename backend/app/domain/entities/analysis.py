@@ -1,5 +1,6 @@
 from dataclasses import dataclass, field
 
+from backend.app.application.dto.scorecard import Scorecard
 from backend.app.domain.enums import CallOutcome, SalesSentiment
 from backend.app.domain.entities.transcript import TranscriptSegment
 
@@ -29,6 +30,14 @@ class CallAnalysis:
     engagement_score: float
     close_probability: float
     follow_up_required: bool
+    executive_summary: str = ""
+    overall_score: float = 0.0
+    overall_confidence: float = 0.0
+    category_scores: dict[str, float] = field(default_factory=dict)
+    category_score_details: list[dict[str, object]] = field(default_factory=list)
+    scorecard: Scorecard | None = None
+    detected_issues: list[str] = field(default_factory=list)
+    coaching_recommendations: list[str] = field(default_factory=list)
     detected_objections: list[str] = field(default_factory=list)
     products_discussed: list[str] = field(default_factory=list)
     key_topics: list[str] = field(default_factory=list)

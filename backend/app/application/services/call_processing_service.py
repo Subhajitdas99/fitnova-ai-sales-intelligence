@@ -7,6 +7,9 @@ from backend.app.application.interfaces.services import (
     DiarizationServiceProtocol,
     TranscriptionServiceProtocol,
 )
+from backend.app.application.services.transcript_merge_service import (
+    TranscriptDiarizationMergeService,
+)
 from backend.app.core.exceptions import ApplicationError, ResourceNotFoundError
 from backend.app.domain.enums import CallStatus
 
@@ -22,11 +25,13 @@ class CallProcessingService:
         repository: CallRepositoryProtocol,
         transcription_service: TranscriptionServiceProtocol,
         diarization_service: DiarizationServiceProtocol,
+        transcript_merge_service: TranscriptDiarizationMergeService,
         intelligence_service: CallIntelligenceServiceProtocol,
     ) -> None:
         self._repository = repository
         self._transcription_service = transcription_service
         self._diarization_service = diarization_service
+        self._transcript_merge_service = transcript_merge_service
         self._intelligence_service = intelligence_service
 
     def process_call(self, call_id: str) -> None:
@@ -60,9 +65,19 @@ class CallProcessingService:
             )
 
             logger.info("Processing call %s: starting diarization", call_id)
-            diarized_segments = self._diarization_service.assign_speakers(
+            diarization_result = self._diarization_service.diarize(
                 audio_path=audio_path,
                 transcript_segments=transcript_segments,
+            )
+            logger.info(
+                "Processing call %s: diarization completed with %s speaker windows from %s",
+                call_id,
+                len(diarization_result.segments),
+                diarization_result.provider,
+            )
+            diarized_segments = self._transcript_merge_service.merge(
+                transcript_segments=transcript_segments,
+                diarization_result=diarization_result,
             )
             duration_seconds = max((segment.end_time for segment in diarized_segments), default=0.0)
             self._repository.save_transcript(

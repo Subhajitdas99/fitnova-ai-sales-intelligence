@@ -13,6 +13,9 @@ from backend.app.infrastructure.services.heuristic_diarization_service import (
 from backend.app.infrastructure.services.openai_call_intelligence_service import (
     OpenAICallIntelligenceService,
 )
+from backend.app.infrastructure.services.openrouter_call_intelligence_service import (
+    OpenRouterCallIntelligenceService,
+)
 from backend.app.infrastructure.services.whisper_transcription_service import (
     WhisperTranscriptionService,
 )
@@ -34,12 +37,21 @@ def build_transcription_service(settings: Settings) -> TranscriptionServiceProto
 def build_diarization_service(settings: Settings) -> DiarizationServiceProtocol:
     if settings.diarization_provider == "whisperx":
         return WhisperXDiarizationService(
-            huggingface_auth_token=settings.huggingface_auth_token
+            huggingface_auth_token=settings.huggingface_auth_token,
+            device=settings.whisperx_device,
         )
     return HeuristicDiarizationService()
 
 
 def build_call_intelligence_service(settings: Settings) -> CallIntelligenceServiceProtocol:
+    if settings.analysis_provider == "openrouter":
+        from backend.app.application.services.prompt_builder import PromptBuilder
+
+        return OpenRouterCallIntelligenceService(
+            api_key=settings.openrouter_api_key,
+            model=settings.openrouter_model,
+            prompt_builder=PromptBuilder(),
+        )
     if settings.analysis_provider == "openai":
         return OpenAICallIntelligenceService(
             api_key=settings.openai_api_key,

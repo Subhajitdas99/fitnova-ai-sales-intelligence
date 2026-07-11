@@ -95,7 +95,7 @@ with st.sidebar:
         placeholder="Optional notes...",
     )
 
-    if st.button("🚀 Upload & Process", use_container_width=True):
+    if st.button("🚀 Upload & Process", width="stretch"):
 
         if uploaded_file is None:
             st.warning("Please upload an audio file.")

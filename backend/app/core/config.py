@@ -2,7 +2,7 @@ from functools import lru_cache
 from pathlib import Path
 from typing import Literal
 
-from pydantic import Field, computed_field
+from pydantic import AliasChoices, Field, computed_field
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
@@ -27,13 +27,22 @@ class Settings(BaseSettings):
     streamlit_backend_url: str = "http://localhost:8000"
     openai_api_key: str | None = None
     openai_model: str = "gpt-4.1-mini"
+    openrouter_api_key: str | None = Field(
+        default=None,
+        validation_alias=AliasChoices("OPENROUTER_API_KEY", "FITNOVA_OPENROUTER_API_KEY"),
+    )
+    openrouter_model: str = Field(
+        default="openai/gpt-4.1-mini",
+        validation_alias=AliasChoices("OPENROUTER_MODEL", "FITNOVA_OPENROUTER_MODEL"),
+    )
     whisper_model_size: str = "base"
     whisper_device: Literal["auto", "cpu", "cuda"] = "auto"
     whisper_temperature: float = 0.0
+    whisperx_device: Literal["cpu", "cuda"] = "cpu"
     huggingface_auth_token: str | None = None
     transcription_provider: Literal["whisper"] = "whisper"
-    diarization_provider: Literal["heuristic", "whisperx"] = "heuristic"
-    analysis_provider: Literal["heuristic", "openai"] = "heuristic"
+    diarization_provider: Literal["heuristic", "whisperx"] = "whisperx"
+    analysis_provider: Literal["openrouter", "openai", "heuristic"] = "openrouter"
     storage_dir: Path = Path("backend/storage/audio")
     default_language: str = "auto"
     max_upload_size_mb: int = 100

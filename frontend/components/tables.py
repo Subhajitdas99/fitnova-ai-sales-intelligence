@@ -24,6 +24,6 @@ def render_calls_table(calls: list[dict]) -> None:
     available_columns = [column for column in display_columns if column in dataframe.columns]
     st.dataframe(
         dataframe[available_columns],
-        use_container_width=True,
+        width="stretch",
         hide_index=True,
     )

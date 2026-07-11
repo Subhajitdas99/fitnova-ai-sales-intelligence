@@ -29,9 +29,9 @@ class HeuristicCallIntelligenceService(CallIntelligenceServiceProtocol):
         transcript_segments: list[TranscriptSegment],
         notes: str | None = None,
     ) -> CallAnalysis:
-        rep_segments = [segment for segment in transcript_segments if segment.speaker_label == "Sales Rep"]
+        rep_segments = [segment for segment in transcript_segments if segment.speaker == "Sales Rep"]
         customer_segments = [
-            segment for segment in transcript_segments if segment.speaker_label != "Sales Rep"
+            segment for segment in transcript_segments if segment.speaker != "Sales Rep"
         ]
         rep_talk_time = sum(segment.end_time - segment.start_time for segment in rep_segments)
         customer_talk_time = sum(
