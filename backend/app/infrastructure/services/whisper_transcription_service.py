@@ -183,7 +183,7 @@ class WhisperTranscriptionService(TranscriptionServiceProtocol):
                 continue
             segments.append(
                 TranscriptSegment(
-                    speaker_label="Unknown",
+                    speaker="Unknown",
                     text=text,
                     start_time=float(segment.get("start", 0.0)),
                     end_time=float(segment.get("end", 0.0)),

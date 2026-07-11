@@ -8,7 +8,8 @@ from backend.app.schemas.common import ORMModel
 
 class TranscriptSegmentResponse(ORMModel):
     id: int | None = None
-    speaker_label: str
+    call_id: str | None = None
+    speaker: str
     text: str
     start_time: float
     end_time: float
@@ -21,6 +22,27 @@ class ActionItemResponse(ORMModel):
     owner: str
     due_hint: str | None = None
     priority: str
+
+
+class EvidenceResponse(ORMModel):
+    id: int | None = None
+    evidence: str
+    timestamp: float
+    supporting_quote: str
+
+
+class CategoryScoreResponse(BaseModel):
+    category: str
+    score: float
+    confidence: float
+    evidence: list[EvidenceResponse] = Field(default_factory=list)
+
+
+class ScorecardResponse(BaseModel):
+    overall_score: float
+    confidence: float
+    evidence: list[EvidenceResponse] = Field(default_factory=list)
+    category_scores: list[CategoryScoreResponse] = Field(default_factory=list)
 
 
 class CallListItemResponse(ORMModel):
@@ -41,6 +63,14 @@ class CallListItemResponse(ORMModel):
 class CallDetailResponse(CallListItemResponse):
     notes: str | None = None
     summary: str | None = None
+    executive_summary: str | None = None
+    overall_score: float | None = None
+    overall_confidence: float | None = None
+    category_scores: dict[str, float] = Field(default_factory=dict)
+    category_score_details: list[dict[str, object]] = Field(default_factory=list)
+    scorecard: ScorecardResponse | None = None
+    detected_issues: list[str] = Field(default_factory=list)
+    coaching_recommendations: list[str] = Field(default_factory=list)
     coaching_notes: str | None = None
     next_steps: str | None = None
     objection_count: int

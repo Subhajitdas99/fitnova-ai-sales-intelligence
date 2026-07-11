@@ -28,7 +28,7 @@ class OpenAICallIntelligenceService(CallIntelligenceServiceProtocol):
         notes: str | None = None,
     ) -> CallAnalysis:
         transcript_text = "\n".join(
-            f"{segment.speaker_label}: {segment.text}" for segment in transcript_segments
+            f"{segment.speaker}: {segment.text}" for segment in transcript_segments
         )
         prompt = f"""
 You are an expert sales call QA analyst.

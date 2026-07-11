@@ -13,6 +13,7 @@ from backend.app.domain.entities.transcript import TranscriptSegment
 from backend.app.domain.enums import CallStatus
 from backend.app.infrastructure.database.models.action_item import ActionItemModel
 from backend.app.infrastructure.database.models.call_record import CallRecordModel
+from backend.app.infrastructure.database.models.scorecard_evidence import ScorecardEvidenceModel
 from backend.app.infrastructure.database.models.transcript_segment import TranscriptSegmentModel
 
 
@@ -45,6 +46,7 @@ class CallRepository(CallRepositoryProtocol):
             .options(
                 selectinload(CallRecordModel.transcript_segments),
                 selectinload(CallRecordModel.action_items),
+                selectinload(CallRecordModel.scorecard_evidence),
             )
             .where(CallRecordModel.id == call_id)
         )
@@ -60,6 +62,7 @@ class CallRepository(CallRepositoryProtocol):
             .options(
                 selectinload(CallRecordModel.transcript_segments),
                 selectinload(CallRecordModel.action_items),
+                selectinload(CallRecordModel.scorecard_evidence),
             )
             .order_by(CallRecordModel.created_at.desc())
             .limit(limit)
@@ -106,7 +109,7 @@ class CallRepository(CallRepositoryProtocol):
         for segment in transcript_segments:
             record.transcript_segments.append(
                 TranscriptSegmentModel(
-                    speaker_label=segment.speaker_label,
+                    speaker=segment.speaker,
                     text=segment.text,
                     start_time=segment.start_time,
                     end_time=segment.end_time,
@@ -130,6 +133,13 @@ class CallRepository(CallRepositoryProtocol):
             raise ResourceNotFoundError(f"Call '{call_id}' was not found.")
 
         record.summary = analysis.summary
+        record.executive_summary = analysis.executive_summary or analysis.summary
+        record.overall_score = analysis.overall_score
+        record.overall_confidence = analysis.overall_confidence
+        record.category_scores = analysis.category_scores
+        record.category_score_details = analysis.category_score_details
+        record.detected_issues = analysis.detected_issues
+        record.coaching_recommendations = analysis.coaching_recommendations
         record.overall_sentiment = analysis.sentiment.value
         record.outcome = analysis.outcome.value
         record.coaching_notes = analysis.coaching_notes
@@ -150,10 +160,11 @@ class CallRepository(CallRepositoryProtocol):
 
         record.transcript_segments.clear()
         record.action_items.clear()
+        record.scorecard_evidence.clear()
         for segment in analysis.transcript_segments:
             record.transcript_segments.append(
                 TranscriptSegmentModel(
-                    speaker_label=segment.speaker_label,
+                    speaker=segment.speaker,
                     text=segment.text,
                     start_time=segment.start_time,
                     end_time=segment.end_time,
@@ -169,11 +180,44 @@ class CallRepository(CallRepositoryProtocol):
                     priority=action_item.priority,
                 )
             )
+        if analysis.scorecard is not None:
+            record.scorecard_evidence.extend(
+                self._build_scorecard_evidence_models(analysis.scorecard)
+            )
 
         self._db.add(record)
         self._db.commit()
         self._db.refresh(record)
         return record
+
+    def _build_scorecard_evidence_models(self, scorecard) -> list[ScorecardEvidenceModel]:
+        evidence_models: list[ScorecardEvidenceModel] = []
+        for evidence in scorecard.evidence:
+            evidence_models.append(
+                ScorecardEvidenceModel(
+                    score_name="overall",
+                    score_type="overall",
+                    score=scorecard.overall_score,
+                    confidence=scorecard.confidence,
+                    evidence=evidence.evidence,
+                    timestamp=evidence.timestamp,
+                    supporting_quote=evidence.supporting_quote,
+                )
+            )
+        for category_score in scorecard.category_scores:
+            for evidence in category_score.evidence:
+                evidence_models.append(
+                    ScorecardEvidenceModel(
+                        score_name=category_score.category,
+                        score_type="category",
+                        score=category_score.score,
+                        confidence=category_score.confidence,
+                        evidence=evidence.evidence,
+                        timestamp=evidence.timestamp,
+                        supporting_quote=evidence.supporting_quote,
+                    )
+                )
+        return evidence_models
 
     def get_dashboard_overview(self) -> dict[str, object]:
         total_calls = self._db.scalar(select(func.count()).select_from(CallRecordModel)) or 0

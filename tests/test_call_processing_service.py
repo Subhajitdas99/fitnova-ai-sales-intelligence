@@ -1,8 +1,15 @@
 from pathlib import Path
 from types import SimpleNamespace
 
+from backend.app.application.dto.diarization_result import (
+    DiarizationResult,
+    DiarizationSpeakerSegment,
+)
 from backend.app.application.dto.transcription_result import TranscriptionResult
 from backend.app.application.services.call_processing_service import CallProcessingService
+from backend.app.application.services.transcript_merge_service import (
+    TranscriptDiarizationMergeService,
+)
 from backend.app.domain.entities.analysis import CallAnalysis
 from backend.app.domain.entities.transcript import TranscriptSegment
 from backend.app.domain.enums import CallOutcome, CallStatus, SalesSentiment
@@ -73,7 +80,7 @@ class FakeTranscriptionService:
             detected_language="en",
             segments=[
                 TranscriptSegment(
-                    speaker_label="Unknown",
+                    speaker="Unknown",
                     text="Initial transcript",
                     start_time=0.0,
                     end_time=3.5,
@@ -84,21 +91,21 @@ class FakeTranscriptionService:
 
 
 class FakeDiarizationService:
-    def assign_speakers(
+    def diarize(
         self,
         audio_path: Path,
-        transcript_segments: list[TranscriptSegment],
-    ) -> list[TranscriptSegment]:
-        return [
-            TranscriptSegment(
-                speaker_label="Sales Rep",
-                text=segment.text,
-                start_time=segment.start_time,
-                end_time=segment.end_time,
-                confidence=segment.confidence,
-            )
-            for segment in transcript_segments
-        ]
+        transcript_segments: list[TranscriptSegment] | None = None,
+    ) -> DiarizationResult:
+        return DiarizationResult(
+            provider="test",
+            segments=[
+                DiarizationSpeakerSegment(
+                    speaker="Sales Rep",
+                    start_time=0.0,
+                    end_time=3.5,
+                )
+            ],
+        )
 
 
 class FakeCallIntelligenceService:
@@ -133,6 +140,7 @@ def test_call_processing_service_persists_transcript_before_analysis(tmp_path: P
         repository=repository,
         transcription_service=FakeTranscriptionService(),
         diarization_service=FakeDiarizationService(),
+        transcript_merge_service=TranscriptDiarizationMergeService(),
         intelligence_service=FakeCallIntelligenceService(),
     )
 
@@ -142,7 +150,7 @@ def test_call_processing_service_persists_transcript_before_analysis(tmp_path: P
     assert len(repository.saved_transcripts) == 2
     assert repository.saved_transcripts[0]["language"] == "en"
     assert repository.saved_transcripts[0]["duration_seconds"] == 3.5
-    assert repository.saved_transcripts[0]["segments"][0].speaker_label == "Unknown"
-    assert repository.saved_transcripts[1]["segments"][0].speaker_label == "Sales Rep"
+    assert repository.saved_transcripts[0]["segments"][0].speaker == "Unknown"
+    assert repository.saved_transcripts[1]["segments"][0].speaker == "Sales Rep"
     assert repository.saved_analysis is not None
     assert repository.saved_analysis["duration_seconds"] == 3.5

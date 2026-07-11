@@ -22,4 +22,4 @@ def render_distribution_chart(title: str, payload: dict[str, int], color: str) -
         color_discrete_sequence=[color],
     )
     figure.update_layout(margin={"l": 0, "r": 0, "t": 20, "b": 0})
-    st.plotly_chart(figure, use_container_width=True)
+    st.plotly_chart(figure, width="stretch")
