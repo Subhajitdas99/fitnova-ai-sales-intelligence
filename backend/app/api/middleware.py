@@ -7,13 +7,19 @@ from fastapi import Request, status
 from fastapi.responses import JSONResponse, Response
 from starlette.middleware.base import BaseHTTPMiddleware, RequestResponseEndpoint
 
-from backend.app.core.request_context import request_id_context
+from backend.app.core.request_context import (
+    get_request_id,
+    request_id_context,
+)
 
 logger = logging.getLogger(__name__)
 
 
 class RequestContextMiddleware(BaseHTTPMiddleware):
-    """Attach request ids, timing, and access logs to every request."""
+    """
+    Attach request IDs, execution timing, and structured access logs
+    to every incoming request.
+    """
 
     async def dispatch(
         self,
@@ -48,7 +54,10 @@ class RequestContextMiddleware(BaseHTTPMiddleware):
             raise
 
         finally:
-            duration_ms = round((time.perf_counter() - start_time) * 1000, 2)
+            duration_ms = round(
+                (time.perf_counter() - start_time) * 1000,
+                2,
+            )
 
             logger.info(
                 "HTTP request completed",
@@ -65,7 +74,9 @@ class RequestContextMiddleware(BaseHTTPMiddleware):
 
 
 class SecurityHeadersMiddleware(BaseHTTPMiddleware):
-    """Apply baseline browser and proxy security headers."""
+    """
+    Apply baseline HTTP security headers.
+    """
 
     async def dispatch(
         self,
@@ -74,18 +85,36 @@ class SecurityHeadersMiddleware(BaseHTTPMiddleware):
     ) -> Response:
         response = await call_next(request)
 
-        response.headers.setdefault("X-Content-Type-Options", "nosniff")
-        response.headers.setdefault("X-Frame-Options", "DENY")
-        response.headers.setdefault("Referrer-Policy", "no-referrer")
-        response.headers.setdefault("X-Permitted-Cross-Domain-Policies", "none")
+        response.headers.setdefault(
+            "X-Content-Type-Options",
+            "nosniff",
+        )
+        response.headers.setdefault(
+            "X-Frame-Options",
+            "DENY",
+        )
+        response.headers.setdefault(
+            "Referrer-Policy",
+            "no-referrer",
+        )
+        response.headers.setdefault(
+            "X-Permitted-Cross-Domain-Policies",
+            "none",
+        )
 
         return response
 
 
 class RequestTimeoutMiddleware(BaseHTTPMiddleware):
-    """Abort requests that exceed the configured timeout."""
+    """
+    Abort requests that exceed the configured timeout.
+    """
 
-    def __init__(self, app, timeout_seconds: float):
+    def __init__(
+        self,
+        app,
+        timeout_seconds: float,
+    ) -> None:
         super().__init__(app)
         self.timeout_seconds = timeout_seconds
 
@@ -94,7 +123,10 @@ class RequestTimeoutMiddleware(BaseHTTPMiddleware):
         request: Request,
         call_next: RequestResponseEndpoint,
     ) -> Response:
-        request_id = request.headers.get("X-Request-ID") or str(uuid4())
+        # Reuse the request ID created by RequestContextMiddleware.
+        request_id = (
+            get_request_id() or request.headers.get("X-Request-ID") or str(uuid4())
+        )
 
         try:
             response = await asyncio.wait_for(
@@ -102,7 +134,10 @@ class RequestTimeoutMiddleware(BaseHTTPMiddleware):
                 timeout=self.timeout_seconds,
             )
 
-            response.headers.setdefault("X-Request-ID", request_id)
+            response.headers.setdefault(
+                "X-Request-ID",
+                request_id,
+            )
 
             return response
 
@@ -122,7 +157,7 @@ class RequestTimeoutMiddleware(BaseHTTPMiddleware):
                 content={
                     "error": {
                         "code": "request_timeout",
-                        "message": "Request exceeded the configured timeout.",
+                        "message": ("Request exceeded the configured timeout."),
                         "request_id": request_id,
                     }
                 },

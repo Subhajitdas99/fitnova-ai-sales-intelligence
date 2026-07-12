@@ -1,3 +1,4 @@
+from collections.abc import AsyncIterator
 from contextlib import asynccontextmanager
 
 from fastapi import FastAPI
@@ -16,9 +17,9 @@ from backend.app.core.config import get_settings
 from backend.app.core.logging import configure_logging, get_logger
 from backend.app.infrastructure.database.initialization import initialize_database
 
-# -------------------------------------------------------------------
+# ==============================================================================
 # Configuration
-# -------------------------------------------------------------------
+# ==============================================================================
 
 settings = get_settings()
 
@@ -27,13 +28,17 @@ configure_logging(settings.log_level)
 logger = get_logger(__name__)
 
 
-# -------------------------------------------------------------------
+# ==============================================================================
 # Application Lifespan
-# -------------------------------------------------------------------
+# ==============================================================================
+
 
 @asynccontextmanager
-async def lifespan(app: FastAPI):
-    """Initialize infrastructure during startup."""
+async def lifespan(_: FastAPI) -> AsyncIterator[None]:
+    """
+    Initialize application infrastructure during startup and perform
+    graceful shutdown when the application exits.
+    """
 
     logger.info("Starting FitNova AI Sales Intelligence...")
 
@@ -46,32 +51,36 @@ async def lifespan(app: FastAPI):
 
     initialize_database()
 
-    logger.info("Application startup complete.")
+    logger.info("Application startup completed successfully.")
 
-    yield
+    try:
+        yield
+    finally:
+        logger.info("Application shutdown completed.")
 
-    logger.info("Application shutdown complete.")
 
-
-# -------------------------------------------------------------------
+# ==============================================================================
 # FastAPI Application Factory
-# -------------------------------------------------------------------
+# ==============================================================================
+
 
 def create_application() -> FastAPI:
+    """
+    Create and configure the FastAPI application.
+    """
+
     app = FastAPI(
         title=settings.app_name,
         version=settings.app_version,
         debug=settings.debug,
         lifespan=lifespan,
+        redirect_slashes=False,
     )
 
-    # ---------------------------------------------------------------
+    # --------------------------------------------------------------------------
     # Middleware
     #
-    # NOTE:
-    # Starlette executes middleware in reverse order.
-    #
-    # Runtime order:
+    # Middleware execution order (request):
     #
     # RequestContext
     # ↓
@@ -83,8 +92,8 @@ def create_application() -> FastAPI:
     # ↓
     # RequestTimeout
     # ↓
-    # Route
-    # ---------------------------------------------------------------
+    # Route Handler
+    # --------------------------------------------------------------------------
 
     app.add_middleware(
         RequestTimeoutMiddleware,
@@ -108,15 +117,15 @@ def create_application() -> FastAPI:
 
     app.add_middleware(RequestContextMiddleware)
 
-    # ---------------------------------------------------------------
+    # --------------------------------------------------------------------------
     # Exception Handlers
-    # ---------------------------------------------------------------
+    # --------------------------------------------------------------------------
 
     register_exception_handlers(app)
 
-    # ---------------------------------------------------------------
+    # --------------------------------------------------------------------------
     # Routes
-    # ---------------------------------------------------------------
+    # --------------------------------------------------------------------------
 
     app.include_router(health_router)
 
@@ -137,8 +146,8 @@ def create_application() -> FastAPI:
     return app
 
 
-# -------------------------------------------------------------------
+# ==============================================================================
 # ASGI Application
-# -------------------------------------------------------------------
+# ==============================================================================
 
 app = create_application()
