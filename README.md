@@ -1,6 +1,6 @@
 # 🚀 FitNova AI Sales Intelligence
 
-> A production-ready AI Sales Call Intelligence platform built with **FastAPI**, **Clean Architecture**, **Whisper**, **WhisperX**, **OpenRouter**, **SQLAlchemy**, and **Streamlit**.
+> Production-ready AI Sales Call Intelligence Platform built with **FastAPI**, **Clean Architecture**, **Whisper**, **WhisperX**, **OpenRouter**, **SQLAlchemy**, and **Streamlit**.
 
 ![Python](https://img.shields.io/badge/Python-3.10+-blue.svg)
 ![FastAPI](https://img.shields.io/badge/FastAPI-Production-green.svg)
@@ -12,20 +12,20 @@
 
 # 📖 Overview
 
-FitNova AI Sales Intelligence is an end-to-end AI platform for analyzing sales calls.
+FitNova AI Sales Intelligence is an end-to-end AI platform for analyzing customer sales calls.
 
 The platform automatically:
 
-- Uploads customer call recordings
-- Transcribes speech into text
-- Performs speaker diarization
+- Uploads sales call recordings
+- Transcribes speech using Whisper
+- Performs speaker diarization using WhisperX
 - Generates AI-powered sales insights
-- Scores sales performance
+- Scores sales conversations
 - Produces coaching recommendations
-- Displays analytics dashboards
-- Stores results for future reporting
+- Displays interactive dashboards
+- Stores results for future analytics
 
-The project is designed using **Clean Architecture** and follows modern backend engineering practices suitable for production systems.
+The backend follows **Clean Architecture** with clear separation between API, Application, Domain, and Infrastructure layers.
 
 ---
 
@@ -33,27 +33,27 @@ The project is designed using **Clean Architecture** and follows modern backend 
 
 ## 🎙 Audio Processing
 
-- Upload MP3/WAV/M4A recordings
-- Local audio storage
+- Upload MP3, WAV, M4A, MP4, MPEG and OGG recordings
 - Background processing
-- Whisper transcription
+- Whisper speech-to-text transcription
 - WhisperX speaker diarization
 - Automatic language detection
+- Local audio storage
 
 ---
 
 ## 🤖 AI Sales Intelligence
 
 - Executive summaries
-- Sales scoring
-- Category-wise scorecards
+- AI-generated coaching notes
+- Sales scorecards
 - Evidence extraction
-- Customer sentiment
+- Customer sentiment analysis
+- Follow-up recommendations
 - Action items
-- Coaching recommendations
 - Confidence scoring
 
-Supports multiple AI providers:
+Supported AI providers:
 
 - OpenRouter
 - OpenAI
@@ -61,22 +61,24 @@ Supports multiple AI providers:
 
 ---
 
-## 📊 Analytics Dashboard
+## 📊 Interactive Dashboard
 
-Interactive Streamlit dashboard including:
+Built with Streamlit.
 
-- Recent Calls
-- KPI Overview
-- Performance Trends
-- Executive Summary
-- Coaching Dashboard
+Features include:
+
+- Executive Dashboard
+- Advisor Performance
+- AI Coaching
 - Sales Analytics
-- Call Details
+- Recent Calls
 - Transcript Viewer
+- Call Details
+- KPI Monitoring
 
 ---
 
-## 🏗 Backend Features
+## 🏗 Backend
 
 - FastAPI REST API
 - Clean Architecture
@@ -85,22 +87,21 @@ Interactive Streamlit dashboard including:
 - SQLAlchemy ORM
 - Background Tasks
 - Pydantic Validation
-- Global Exception Handling
-- Request Middleware
 - Structured JSON Logging
+- Global Exception Handling
+- Middleware Pipeline
 
 ---
 
 ## 🔒 Production Features
 
-- Docker support
-- Docker Compose
+- Docker & Docker Compose
+- GitHub Actions CI
 - Health Checks
 - Request Timeout Middleware
 - Security Headers
 - Request ID Tracking
 - Startup Validation
-- GitHub Actions CI
 - Environment-based Configuration
 
 ---
@@ -108,50 +109,60 @@ Interactive Streamlit dashboard including:
 # 🏛 Architecture
 
 ```
-                    Streamlit Dashboard
-                            │
-                            ▼
-                     FastAPI REST API
-                            │
-        ┌───────────────────┴───────────────────┐
-        │                                       │
-        ▼                                       ▼
- Application Services                 Background Tasks
-        │
-        ▼
- Repository Layer
-        │
-        ▼
- SQLAlchemy ORM
-        │
-        ▼
- SQLite / PostgreSQL
+                Streamlit Dashboard
+                        │
+                        ▼
+                 FastAPI REST API
+                        │
+     ┌──────────────────┴──────────────────┐
+     │                                     │
+     ▼                                     ▼
+Application Services             Background Tasks
+     │
+     ▼
+Repository Layer
+     │
+     ▼
+SQLAlchemy ORM
+     │
+     ▼
+SQLite / PostgreSQL
 
-        AI Providers
+AI Providers
 
- Whisper
- WhisperX
- OpenRouter
- OpenAI
- Heuristic
+• Whisper
+• WhisperX
+• OpenRouter
+• OpenAI
+• Heuristic
 ```
 
-The backend follows **Clean Architecture**.
+Project layout:
 
 ```
 backend/
 │
-├── api/
-├── application/
-├── domain/
-├── infrastructure/
-├── schemas/
-└── core/
+├── app/
+│   ├── api/
+│   ├── application/
+│   ├── core/
+│   ├── domain/
+│   ├── infrastructure/
+│   └── schemas/
+│
+├── main.py
+│
+frontend/
+│   ├── components/
+│   └── services/
+│
+docs/
+tests/
 ```
 
 ---
 
-# 🛠 Tech Stack
+# 🛠 Technology Stack
 
 ## Backend
 
@@ -179,7 +190,7 @@ backend/
 - Docker Compose
 - GitHub Actions
 
-## Testing
+## Quality
 
 - Pytest
 - Ruff
@@ -187,37 +198,9 @@ backend/
 
 ---
 
-# 📂 Repository Structure
-
-```
-FitNova/
-│
-├── backend/
-│   ├── api/
-│   ├── application/
-│   ├── core/
-│   ├── domain/
-│   ├── infrastructure/
-│   └── schemas/
-│
-├── frontend/
-│   ├── components/
-│   └── services/
-│
-├── docs/
-│
-├── tests/
-│
-├── docker-compose.yml
-├── requirements.txt
-└── README.md
-```
-
----
-
 # ⚙ Installation
 
-Clone the repository
+Clone the repository.
 
 ```bash
 git clone https://github.com/Subhajitdas99/fitnova-ai-sales-intelligence.git
@@ -225,7 +208,7 @@ git clone https://github.com/Subhajitdas99/fitnova-ai-sales-intelligence.git
 cd fitnova-ai-sales-intelligence
 ```
 
-Create a virtual environment
+Create a virtual environment.
 
 ```bash
 python -m venv .venv
@@ -243,7 +226,7 @@ Linux / macOS
 source .venv/bin/activate
 ```
 
-Install dependencies
+Install dependencies.
 
 ```bash
 pip install -r requirements.txt
@@ -253,51 +236,75 @@ pip install -r requirements.txt
 
 # 🔧 Environment Configuration
 
-Create a local environment file
+Create a local environment file.
 
 ```bash
 copy .env.example .env
 ```
 
-Configure your preferred providers.
+Example configuration:
 
-Example:
-
-```
+```env
 FITNOVA_TRANSCRIPTION_PROVIDER=whisper
-
 FITNOVA_DIARIZATION_PROVIDER=whisperx
-
 FITNOVA_ANALYSIS_PROVIDER=openrouter
 ```
+
+Some providers require credentials:
+
+| Variable | Purpose |
+|----------|---------|
+| OPENROUTER_API_KEY | OpenRouter AI analysis |
+| FITNOVA_OPENAI_API_KEY | OpenAI analysis |
+| FITNOVA_HUGGINGFACE_AUTH_TOKEN | WhisperX speaker diarization |
 
 ---
 
 # ▶ Running the Application
 
-Start the backend
+Start the backend.
 
 ```bash
 uvicorn backend.main:app --reload
 ```
 
-Start the frontend
+Start the frontend.
 
 ```bash
-streamlit run frontend/app.py
+python -m streamlit run frontend/app.py
+```
+
+Open:
+
+Backend
+
+```
+http://localhost:8000
+```
+
+Swagger UI
+
+```
+http://localhost:8000/docs
+```
+
+Frontend
+
+```
+http://localhost:8501
 ```
 
 ---
 
 # 🐳 Docker
 
-Build and start all services
+Build and start the application.
 
 ```bash
 docker compose up --build
 ```
 
-Stop
+Stop.
 
 ```bash
 docker compose down
@@ -313,8 +320,6 @@ docker compose down
 GET /api/v1/health
 ```
 
----
-
 ## Calls
 
 ```
@@ -327,72 +332,82 @@ GET /api/v1/calls/{call_id}
 POST /api/v1/calls/{call_id}/process
 ```
 
----
-
 ## Dashboard
 
 ```
 GET /api/v1/dashboard/overview
 
-GET /api/v1/dashboard/analytics
+GET /api/v1/dashboard/executive
+
+GET /api/v1/dashboard/advisors
+
+GET /api/v1/dashboard/coaching
+```
+
+## Analytics
+
+```
+GET /api/v1/analytics
 ```
 
 ---
 
 # 🧪 Testing
 
-Run all tests
+Run the complete test suite.
 
 ```bash
 pytest -q
 ```
 
-Format check
+Check formatting.
 
 ```bash
 black --check .
 ```
 
-Lint
+Run linting.
 
 ```bash
 ruff check .
 ```
 
-Compilation
+Verify Python compilation.
 
 ```bash
 python -m compileall backend frontend
 ```
 
-Current Status
+Current project status:
 
 ```
-42 / 42 tests passing
+✓ 42/42 tests passing
+✓ Black formatting passes
+✓ Ruff lint passes
+✓ Python compilation passes
 ```
 
 ---
 
 # 📚 Documentation
 
-Additional documentation is available in:
+Additional documentation:
 
-- `docs/architecture.md`
-- `docs/deployment.md`
-- `docs/configuration.md`
-- `docs/logging.md`
-- `docs/sprint7-analytics-architecture.md`
+- docs/configuration.md
+- docs/deployment.md
+- docs/logging.md
+- docs/sprint7-analytics-architecture.md
 
 ---
 
 # 🚀 Future Improvements
 
-- PostgreSQL production deployment
+- PostgreSQL deployment
 - Redis task queue
 - Celery workers
 - Authentication & Authorization
 - Multi-tenant organizations
-- S3/Azure Blob Storage
+- Object storage (AWS S3 / Azure Blob)
 - Real-time dashboard updates
 - Kubernetes deployment
 - Prometheus metrics
@@ -404,7 +419,7 @@ Additional documentation is available in:
 
 **Subhajit Das**
 
-B.Tech CSE (AI & ML)
+B.Tech Computer Science Engineering (AI & ML)
 
 Machine Learning • Generative AI • Backend Engineering • MLOps
 
