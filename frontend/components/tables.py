@@ -21,7 +21,9 @@ def render_calls_table(calls: list[dict]) -> None:
         "close_probability",
         "created_at",
     ]
-    available_columns = [column for column in display_columns if column in dataframe.columns]
+    available_columns = [
+        column for column in display_columns if column in dataframe.columns
+    ]
     st.dataframe(
         dataframe[available_columns],
         width="stretch",

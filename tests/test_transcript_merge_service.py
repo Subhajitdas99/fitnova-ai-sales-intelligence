@@ -52,7 +52,10 @@ def test_merge_assigns_speaker_with_largest_time_overlap() -> None:
     )
 
     assert [segment.speaker for segment in merged_segments] == ["Sales Rep", "Customer"]
-    assert [segment.text for segment in merged_segments] == ["First segment", "Second segment"]
+    assert [segment.text for segment in merged_segments] == [
+        "First segment",
+        "Second segment",
+    ]
 
 
 def test_merge_preserves_transcript_speaker_when_diarization_is_empty() -> None:

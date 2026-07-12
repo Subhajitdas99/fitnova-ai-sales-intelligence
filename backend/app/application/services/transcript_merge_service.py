@@ -49,7 +49,9 @@ class TranscriptDiarizationMergeService:
         )
 
         for speaker_segment in diarization_result.segments:
-            overlap_start = max(transcript_segment.start_time, speaker_segment.start_time)
+            overlap_start = max(
+                transcript_segment.start_time, speaker_segment.start_time
+            )
             overlap_end = min(transcript_segment.end_time, speaker_segment.end_time)
             overlap = max(0.0, overlap_end - overlap_start)
             normalized_overlap = overlap / transcript_duration

@@ -8,7 +8,9 @@ from backend.app.domain.entities.transcript import TranscriptSegment
 class MockTranscriptionService(TranscriptionServiceProtocol):
     """Deterministic transcript generator used for local demos and tests."""
 
-    def transcribe(self, audio_path: Path, language: str | None = None) -> TranscriptionResult:
+    def transcribe(
+        self, audio_path: Path, language: str | None = None
+    ) -> TranscriptionResult:
         stem = audio_path.stem.replace("-", " ")
         return TranscriptionResult(
             detected_language=(language or "en"),

@@ -4,8 +4,13 @@ import requests
 import streamlit as st
 from dotenv import load_dotenv
 
-from frontend.components.charts import render_distribution_chart
+from frontend.components.analytics import render_analytics_dashboard
+from frontend.components.coaching import render_coaching_dashboard
 from frontend.components.detail import render_call_detail
+from frontend.components.executive import (
+    render_advisor_performance,
+    render_executive_dashboard,
+)
 from frontend.components.metrics import render_overview_metrics
 from frontend.components.tables import render_calls_table
 from frontend.services.api_client import FitNovaApiClient
@@ -132,6 +137,10 @@ with st.sidebar:
 try:
 
     overview = client.get_dashboard_overview()
+    executive = client.get_executive_dashboard()
+    advisors = client.get_advisor_performance()
+    coaching_cards = client.get_coaching_dashboard()
+    analytics = client.get_analytics_dashboard()
 
     calls = client.list_calls(limit=20)
 
@@ -146,61 +155,49 @@ except requests.RequestException as exc:
 
     st.stop()
 
-# ---------------------------------------------------------
-# Metrics
-# ---------------------------------------------------------
+executive_tab, advisor_tab, coaching_tab, analytics_tab, calls_tab = st.tabs(
+    [
+        "Executive Dashboard",
+        "Advisor Performance",
+        "AI Coaching",
+        "Analytics",
+        "Call Explorer",
+    ]
+)
 
-render_overview_metrics(overview)
+with executive_tab:
+    render_executive_dashboard(executive)
+    render_overview_metrics(overview)
 
-# ---------------------------------------------------------
-# Charts
-# ---------------------------------------------------------
+with advisor_tab:
+    render_advisor_performance(advisors)
 
-left, right = st.columns(2)
+with coaching_tab:
+    render_coaching_dashboard(coaching_cards)
 
-with left:
+with analytics_tab:
+    render_analytics_dashboard(analytics)
 
-    render_distribution_chart(
-        "Sentiment Distribution",
-        overview["sentiment_breakdown"],
-        color="#2E8B57",
-    )
+with calls_tab:
+    render_calls_table(calls)
 
-with right:
+    if calls:
 
-    render_distribution_chart(
-        "Outcome Distribution",
-        overview["outcome_breakdown"],
-        color="#1F77B4",
-    )
-
-# ---------------------------------------------------------
-# Calls Table
-# ---------------------------------------------------------
-
-render_calls_table(calls)
-
-# ---------------------------------------------------------
-# Call Detail
-# ---------------------------------------------------------
-
-if calls:
-
-    selected_call_id = st.selectbox(
-        "Inspect Call",
-        options=[call["id"] for call in calls],
-        format_func=lambda cid: next(
-            (
-                f"{call['customer_name']} | "
-                f"{call['sales_rep_name']} | "
-                f"{call['status']}"
-                for call in calls
-                if call["id"] == cid
+        selected_call_id = st.selectbox(
+            "Inspect Call",
+            options=[call["id"] for call in calls],
+            format_func=lambda cid: next(
+                (
+                    f"{call['customer_name']} | "
+                    f"{call['sales_rep_name']} | "
+                    f"{call['status']}"
+                    for call in calls
+                    if call["id"] == cid
+                ),
+                cid,
             ),
-            cid,
-        ),
-    )
+        )
 
-    call = client.get_call(selected_call_id)
+        call = client.get_call(selected_call_id)
 
-    render_call_detail(call)
+        render_call_detail(call)

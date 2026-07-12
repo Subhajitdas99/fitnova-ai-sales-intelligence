@@ -49,7 +49,10 @@ def test_whisperx_diarization_returns_provider_neutral_result(
     result = service.diarize(audio_path=audio_path)
 
     assert result.provider == "whisperx"
-    assert [segment.speaker for segment in result.segments] == ["SPEAKER_00", "SPEAKER_01"]
+    assert [segment.speaker for segment in result.segments] == [
+        "SPEAKER_00",
+        "SPEAKER_01",
+    ]
     assert result.segments[0].start_time == 0.0
     assert result.segments[1].end_time == 5.0
 

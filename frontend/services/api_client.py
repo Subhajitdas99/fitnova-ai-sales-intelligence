@@ -10,7 +10,35 @@ class FitNovaApiClient:
         self._base_url = base_url.rstrip("/")
 
     def get_dashboard_overview(self) -> dict[str, Any]:
-        response = requests.get(f"{self._base_url}/api/v1/dashboard/overview", timeout=30)
+        response = requests.get(
+            f"{self._base_url}/api/v1/dashboard/overview", timeout=30
+        )
+        response.raise_for_status()
+        return response.json()
+
+    def get_executive_dashboard(self) -> dict[str, Any]:
+        response = requests.get(
+            f"{self._base_url}/api/v1/dashboard/executive", timeout=30
+        )
+        response.raise_for_status()
+        return response.json()
+
+    def get_advisor_performance(self) -> list[dict[str, Any]]:
+        response = requests.get(
+            f"{self._base_url}/api/v1/dashboard/advisors", timeout=30
+        )
+        response.raise_for_status()
+        return response.json()
+
+    def get_coaching_dashboard(self) -> list[dict[str, Any]]:
+        response = requests.get(
+            f"{self._base_url}/api/v1/dashboard/coaching", timeout=30
+        )
+        response.raise_for_status()
+        return response.json()
+
+    def get_analytics_dashboard(self) -> dict[str, Any]:
+        response = requests.get(f"{self._base_url}/api/v1/analytics", timeout=30)
         response.raise_for_status()
         return response.json()
 

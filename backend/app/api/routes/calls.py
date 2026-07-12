@@ -1,7 +1,16 @@
 import logging
 from typing import Annotated
 
-from fastapi import APIRouter, BackgroundTasks, Depends, File, Form, HTTPException, UploadFile, status
+from fastapi import (
+    APIRouter,
+    BackgroundTasks,
+    Depends,
+    File,
+    Form,
+    HTTPException,
+    UploadFile,
+    status,
+)
 
 from backend.app.api.dependencies.services import (
     get_call_repository,
@@ -9,13 +18,18 @@ from backend.app.api.dependencies.services import (
     get_upload_service,
 )
 from backend.app.application.services.background_tasks import process_call_in_background
-from backend.app.application.services.call_processing_service import CallProcessingService
+from backend.app.application.services.call_processing_service import (
+    CallProcessingService,
+)
 from backend.app.application.services.call_upload_service import CallUploadService
 from backend.app.core.exceptions import ApplicationError, ResourceNotFoundError
 from backend.app.domain.enums import CallStatus
 from backend.app.infrastructure.repositories.call_repository import CallRepository
-from backend.app.schemas.calls import CallDetailResponse, CallListItemResponse, UploadCallResponse
-
+from backend.app.schemas.calls import (
+    CallDetailResponse,
+    CallListItemResponse,
+    UploadCallResponse,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -74,7 +88,9 @@ def get_call(
 ) -> CallDetailResponse:
     record = repository.get_call(call_id)
     if record is None:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Call not found.")
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND, detail="Call not found."
+        )
     return CallDetailResponse.model_validate(record)
 
 
@@ -87,12 +103,18 @@ def process_call_now(
     try:
         processing_service.process_call(call_id)
     except ResourceNotFoundError as exc:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(exc)) from exc
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND, detail=str(exc)
+        ) from exc
     except ApplicationError as exc:
         logger.exception("Failed to process call %s", call_id)
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(exc)) from exc
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST, detail=str(exc)
+        ) from exc
 
     record = repository.get_call(call_id)
     if record is None:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Call not found.")
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND, detail="Call not found."
+        )
     return CallDetailResponse.model_validate(record)

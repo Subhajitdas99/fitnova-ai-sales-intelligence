@@ -43,7 +43,9 @@ def build_diarization_service(settings: Settings) -> DiarizationServiceProtocol:
     return HeuristicDiarizationService()
 
 
-def build_call_intelligence_service(settings: Settings) -> CallIntelligenceServiceProtocol:
+def build_call_intelligence_service(
+    settings: Settings,
+) -> CallIntelligenceServiceProtocol:
     if settings.analysis_provider == "openrouter":
         from backend.app.application.services.prompt_builder import PromptBuilder
 

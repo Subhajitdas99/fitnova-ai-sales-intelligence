@@ -6,7 +6,9 @@ from backend.app.application.dto.diarization_result import (
     DiarizationSpeakerSegment,
 )
 from backend.app.application.dto.transcription_result import TranscriptionResult
-from backend.app.application.services.call_processing_service import CallProcessingService
+from backend.app.application.services.call_processing_service import (
+    CallProcessingService,
+)
 from backend.app.application.services.transcript_merge_service import (
     TranscriptDiarizationMergeService,
 )
@@ -75,7 +77,9 @@ class FakeRepository:
 
 
 class FakeTranscriptionService:
-    def transcribe(self, audio_path: Path, language: str | None = None) -> TranscriptionResult:
+    def transcribe(
+        self, audio_path: Path, language: str | None = None
+    ) -> TranscriptionResult:
         return TranscriptionResult(
             detected_language="en",
             segments=[
@@ -132,7 +136,9 @@ class FakeCallIntelligenceService:
         )
 
 
-def test_call_processing_service_persists_transcript_before_analysis(tmp_path: Path) -> None:
+def test_call_processing_service_persists_transcript_before_analysis(
+    tmp_path: Path,
+) -> None:
     audio_path = tmp_path / "call.wav"
     audio_path.write_bytes(b"audio")
     repository = FakeRepository(audio_path)

@@ -63,4 +63,6 @@ class WhisperXDiarizationService(DiarizationServiceProtocol):
         try:
             return pipeline(token=self._huggingface_auth_token, device=self._device)
         except TypeError:
-            return pipeline(use_auth_token=self._huggingface_auth_token, device=self._device)
+            return pipeline(
+                use_auth_token=self._huggingface_auth_token, device=self._device
+            )

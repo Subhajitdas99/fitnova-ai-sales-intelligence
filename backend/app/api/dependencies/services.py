@@ -3,8 +3,11 @@ from functools import lru_cache
 from fastapi import Depends
 from sqlalchemy.orm import Session
 
-from backend.app.application.services.call_processing_service import CallProcessingService
+from backend.app.application.services.call_processing_service import (
+    CallProcessingService,
+)
 from backend.app.application.services.call_upload_service import CallUploadService
+from backend.app.application.services.analytics_service import AnalyticsService
 from backend.app.application.services.dashboard_service import DashboardService
 from backend.app.application.services.transcript_merge_service import (
     TranscriptDiarizationMergeService,
@@ -76,3 +79,9 @@ def get_dashboard_service(
     repository: CallRepository = Depends(get_call_repository),
 ) -> DashboardService:
     return DashboardService(repository)
+
+
+def get_analytics_service(
+    repository: CallRepository = Depends(get_call_repository),
+) -> AnalyticsService:
+    return AnalyticsService(repository)

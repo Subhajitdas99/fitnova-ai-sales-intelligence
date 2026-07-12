@@ -24,7 +24,9 @@ class FakeWhisperModel:
         return response
 
 
-def install_fake_whisper_runtime(monkeypatch: pytest.MonkeyPatch, model: FakeWhisperModel) -> None:
+def install_fake_whisper_runtime(
+    monkeypatch: pytest.MonkeyPatch, model: FakeWhisperModel
+) -> None:
     fake_whisper = SimpleNamespace(load_model=lambda model_size, device=None: model)
     fake_torch = SimpleNamespace(cuda=SimpleNamespace(is_available=lambda: False))
     monkeypatch.setitem(sys.modules, "whisper", fake_whisper)

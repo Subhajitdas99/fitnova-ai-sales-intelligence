@@ -37,7 +37,9 @@ class LLMAnalysisResponse(BaseModel):
     @classmethod
     def validate_scorecard(cls, value: Scorecard) -> Scorecard:
         if not value.category_scores:
-            raise ValueError("scorecard.category_scores must include at least one category.")
+            raise ValueError(
+                "scorecard.category_scores must include at least one category."
+            )
         for category_score in value.category_scores:
             if not category_score.category.strip():
                 raise ValueError("category score names cannot be blank.")

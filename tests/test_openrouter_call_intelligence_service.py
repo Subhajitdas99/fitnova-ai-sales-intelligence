@@ -42,6 +42,8 @@ def valid_response_json() -> str:
       {
         "evidence": "Customer showed interest in a pilot.",
         "timestamp": 0.8,
+        "speaker": "Sales Rep",
+        "confidence": 0.91,
         "supporting_quote": "We can support your pilot."
       }
     ],
@@ -54,6 +56,8 @@ def valid_response_json() -> str:
           {
             "evidence": "Rep identified a concrete pricing concern.",
             "timestamp": 3.2,
+            "speaker": "Customer",
+            "confidence": 0.88,
             "supporting_quote": "Pricing is my concern."
           }
         ]
@@ -66,6 +70,8 @@ def valid_response_json() -> str:
           {
             "evidence": "Rep connected support to the pilot.",
             "timestamp": 0.3,
+            "speaker": "Sales Rep",
+            "confidence": 0.86,
             "supporting_quote": "We can support your pilot."
           }
         ]
@@ -134,7 +140,9 @@ def test_openrouter_analysis_validates_response_and_maps_to_domain() -> None:
     assert analysis.category_scores["discovery"] == 80
     assert analysis.category_score_details[0]["confidence"] == 0.88
     assert analysis.scorecard is not None
-    assert analysis.scorecard.evidence[0].supporting_quote == "We can support your pilot."
+    assert (
+        analysis.scorecard.evidence[0].supporting_quote == "We can support your pilot."
+    )
     assert analysis.detected_issues == ["Pricing concern was not quantified."]
     assert analysis.coaching_recommendations == [
         "Ask for budget range before presenting rollout options."
@@ -147,6 +155,29 @@ def test_openrouter_analysis_validates_response_and_maps_to_domain() -> None:
 
 def test_openrouter_analysis_retries_invalid_json_responses() -> None:
     client = FakeOpenAIClient(["not json", valid_response_json()])
+    service = OpenRouterCallIntelligenceService(
+        api_key=None,
+        model="openai/gpt-4.1-mini",
+        prompt_builder=PromptBuilder(),
+        client=client,
+    )
+
+    analysis = service.analyze(
+        customer_name="Acme",
+        sales_rep_name="Jordan",
+        transcript_segments=transcript(),
+    )
+
+    assert analysis.overall_score == 82
+    assert len(client.completions.calls) == 2
+    retry_message = client.completions.calls[1]["messages"][1]["content"]
+    assert "previous response was rejected" in retry_message
+
+
+def test_openrouter_analysis_retries_schema_validation_failures() -> None:
+    client = FakeOpenAIClient(
+        ['{"executive_summary": "Incomplete"}', valid_response_json()]
+    )
     service = OpenRouterCallIntelligenceService(
         api_key=None,
         model="openai/gpt-4.1-mini",

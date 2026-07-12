@@ -16,3 +16,7 @@ class ExternalServiceError(ApplicationError):
 
 class ServiceConfigurationError(ApplicationError):
     """Raised when a service provider is not configured correctly."""
+
+
+class StartupConfigurationError(ServiceConfigurationError):
+    """Raised when startup configuration is not deployable."""

@@ -18,7 +18,9 @@ class AudioStorageProtocol(Protocol):
 class TranscriptionServiceProtocol(Protocol):
     """Transcription abstraction for converting audio to text."""
 
-    def transcribe(self, audio_path: Path, language: str | None = None) -> TranscriptionResult: ...
+    def transcribe(
+        self, audio_path: Path, language: str | None = None
+    ) -> TranscriptionResult: ...
 
 
 class DiarizationServiceProtocol(Protocol):

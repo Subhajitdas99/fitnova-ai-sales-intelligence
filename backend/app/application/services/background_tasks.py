@@ -6,10 +6,11 @@ from backend.app.api.dependencies.services import (
     get_transcript_merge_service,
     get_transcription_service,
 )
-from backend.app.application.services.call_processing_service import CallProcessingService
+from backend.app.application.services.call_processing_service import (
+    CallProcessingService,
+)
 from backend.app.infrastructure.database.session import session_scope
 from backend.app.infrastructure.repositories.call_repository import CallRepository
-
 
 logger = logging.getLogger(__name__)
 

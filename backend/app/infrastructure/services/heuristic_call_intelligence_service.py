@@ -29,11 +29,15 @@ class HeuristicCallIntelligenceService(CallIntelligenceServiceProtocol):
         transcript_segments: list[TranscriptSegment],
         notes: str | None = None,
     ) -> CallAnalysis:
-        rep_segments = [segment for segment in transcript_segments if segment.speaker == "Sales Rep"]
+        rep_segments = [
+            segment for segment in transcript_segments if segment.speaker == "Sales Rep"
+        ]
         customer_segments = [
             segment for segment in transcript_segments if segment.speaker != "Sales Rep"
         ]
-        rep_talk_time = sum(segment.end_time - segment.start_time for segment in rep_segments)
+        rep_talk_time = sum(
+            segment.end_time - segment.start_time for segment in rep_segments
+        )
         customer_talk_time = sum(
             segment.end_time - segment.start_time for segment in customer_segments
         )
@@ -61,8 +65,12 @@ class HeuristicCallIntelligenceService(CallIntelligenceServiceProtocol):
             if len(topic) > 4
         ]
 
-        positive_score = sum(1 for keyword in self._positive_keywords if keyword in full_text)
-        negative_score = sum(1 for keyword in self._negative_keywords if keyword in full_text)
+        positive_score = sum(
+            1 for keyword in self._positive_keywords if keyword in full_text
+        )
+        negative_score = sum(
+            1 for keyword in self._negative_keywords if keyword in full_text
+        )
         if positive_score and negative_score:
             sentiment = SalesSentiment.MIXED
         elif positive_score > negative_score:

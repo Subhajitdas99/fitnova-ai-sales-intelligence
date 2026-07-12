@@ -10,7 +10,9 @@ from backend.app.infrastructure.repositories.call_repository import CallReposito
 def test_repository_persists_speaker_labeled_transcript_segments() -> None:
     engine = create_engine("sqlite:///:memory:", future=True)
     Base.metadata.create_all(bind=engine)
-    session_factory = sessionmaker(bind=engine, autoflush=False, autocommit=False, future=True)
+    session_factory = sessionmaker(
+        bind=engine, autoflush=False, autocommit=False, future=True
+    )
 
     with session_factory() as session:
         repository = CallRepository(session)

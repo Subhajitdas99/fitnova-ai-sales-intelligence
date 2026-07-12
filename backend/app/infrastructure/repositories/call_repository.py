@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from datetime import datetime, timezone
 
-from sqlalchemy import func, select
+from sqlalchemy import select
 from sqlalchemy.orm import Session, selectinload
 
 from backend.app.application.dto.call_context import CallCreationData
@@ -13,8 +13,12 @@ from backend.app.domain.entities.transcript import TranscriptSegment
 from backend.app.domain.enums import CallStatus
 from backend.app.infrastructure.database.models.action_item import ActionItemModel
 from backend.app.infrastructure.database.models.call_record import CallRecordModel
-from backend.app.infrastructure.database.models.scorecard_evidence import ScorecardEvidenceModel
-from backend.app.infrastructure.database.models.transcript_segment import TranscriptSegmentModel
+from backend.app.infrastructure.database.models.scorecard_evidence import (
+    ScorecardEvidenceModel,
+)
+from backend.app.infrastructure.database.models.transcript_segment import (
+    TranscriptSegmentModel,
+)
 
 
 class CallRepository(CallRepositoryProtocol):
@@ -69,6 +73,18 @@ class CallRepository(CallRepositoryProtocol):
         )
         if status is not None:
             statement = statement.where(CallRecordModel.status == status.value)
+        return list(self._db.scalars(statement).all())
+
+    def list_calls_for_analytics(self) -> list[CallRecordModel]:
+        statement = (
+            select(CallRecordModel)
+            .options(
+                selectinload(CallRecordModel.transcript_segments),
+                selectinload(CallRecordModel.action_items),
+                selectinload(CallRecordModel.scorecard_evidence),
+            )
+            .order_by(CallRecordModel.created_at.asc())
+        )
         return list(self._db.scalars(statement).all())
 
     def update_status(
@@ -190,7 +206,9 @@ class CallRepository(CallRepositoryProtocol):
         self._db.refresh(record)
         return record
 
-    def _build_scorecard_evidence_models(self, scorecard) -> list[ScorecardEvidenceModel]:
+    def _build_scorecard_evidence_models(
+        self, scorecard
+    ) -> list[ScorecardEvidenceModel]:
         evidence_models: list[ScorecardEvidenceModel] = []
         for evidence in scorecard.evidence:
             evidence_models.append(
@@ -198,9 +216,10 @@ class CallRepository(CallRepositoryProtocol):
                     score_name="overall",
                     score_type="overall",
                     score=scorecard.overall_score,
-                    confidence=scorecard.confidence,
+                    confidence=evidence.confidence,
                     evidence=evidence.evidence,
                     timestamp=evidence.timestamp,
+                    speaker=evidence.speaker,
                     supporting_quote=evidence.supporting_quote,
                 )
             )
@@ -211,73 +230,11 @@ class CallRepository(CallRepositoryProtocol):
                         score_name=category_score.category,
                         score_type="category",
                         score=category_score.score,
-                        confidence=category_score.confidence,
+                        confidence=evidence.confidence,
                         evidence=evidence.evidence,
                         timestamp=evidence.timestamp,
+                        speaker=evidence.speaker,
                         supporting_quote=evidence.supporting_quote,
                     )
                 )
         return evidence_models
-
-    def get_dashboard_overview(self) -> dict[str, object]:
-        total_calls = self._db.scalar(select(func.count()).select_from(CallRecordModel)) or 0
-        completed_calls = (
-            self._db.scalar(
-                select(func.count())
-                .select_from(CallRecordModel)
-                .where(CallRecordModel.status == CallStatus.COMPLETED.value)
-            )
-            or 0
-        )
-        failed_calls = (
-            self._db.scalar(
-                select(func.count())
-                .select_from(CallRecordModel)
-                .where(CallRecordModel.status == CallStatus.FAILED.value)
-            )
-            or 0
-        )
-        average_close_probability = (
-            self._db.scalar(select(func.avg(CallRecordModel.close_probability))) or 0.0
-        )
-        average_engagement_score = (
-            self._db.scalar(select(func.avg(CallRecordModel.engagement_score))) or 0.0
-        )
-        recent_calls = self.list_calls(limit=10)
-
-        sentiment_breakdown_rows = self._db.execute(
-            select(
-                CallRecordModel.overall_sentiment,
-                func.count(CallRecordModel.id),
-            )
-            .where(CallRecordModel.overall_sentiment.is_not(None))
-            .group_by(CallRecordModel.overall_sentiment)
-        ).all()
-        outcome_breakdown_rows = self._db.execute(
-            select(
-                CallRecordModel.outcome,
-                func.count(CallRecordModel.id),
-            )
-            .where(CallRecordModel.outcome.is_not(None))
-            .group_by(CallRecordModel.outcome)
-        ).all()
-
-        return {
-            "total_calls": total_calls,
-            "completed_calls": completed_calls,
-            "failed_calls": failed_calls,
-            "processing_calls": max(total_calls - completed_calls - failed_calls, 0),
-            "average_close_probability": round(float(average_close_probability), 2),
-            "average_engagement_score": round(float(average_engagement_score), 2),
-            "sentiment_breakdown": {
-                row[0]: row[1]
-                for row in sentiment_breakdown_rows
-                if row[0] is not None
-            },
-            "outcome_breakdown": {
-                row[0]: row[1]
-                for row in outcome_breakdown_rows
-                if row[0] is not None
-            },
-            "recent_calls": recent_calls,
-        }

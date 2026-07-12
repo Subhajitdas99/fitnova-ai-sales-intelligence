@@ -1,6 +1,6 @@
 from datetime import datetime
 
-from pydantic import BaseModel, Field
+from pydantic import AliasChoices, BaseModel, Field
 
 from backend.app.domain.enums import CallOutcome, CallStatus, SalesSentiment
 from backend.app.schemas.common import ORMModel
@@ -27,8 +27,13 @@ class ActionItemResponse(ORMModel):
 class EvidenceResponse(ORMModel):
     id: int | None = None
     evidence: str
-    timestamp: float
-    supporting_quote: str
+    timestamp: float = 0.0
+    speaker: str = "Unknown"
+    confidence: float = Field(default=0.0, ge=0.0, le=1.0)
+    supporting_quote: str = Field(
+        default="",
+        validation_alias=AliasChoices("supporting_quote", "quote"),
+    )
 
 
 class CategoryScoreResponse(BaseModel):

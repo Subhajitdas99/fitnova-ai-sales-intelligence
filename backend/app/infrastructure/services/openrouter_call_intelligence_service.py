@@ -11,7 +11,6 @@ from backend.app.core.exceptions import ExternalServiceError, ServiceConfigurati
 from backend.app.domain.entities.analysis import ActionItem, CallAnalysis
 from backend.app.domain.entities.transcript import TranscriptSegment
 
-
 logger = logging.getLogger(__name__)
 
 
@@ -116,7 +115,9 @@ class OpenRouterCallIntelligenceService(CallIntelligenceServiceProtocol):
         response: LLMAnalysisResponse,
         transcript_segments: list[TranscriptSegment],
     ) -> CallAnalysis:
-        talk_ratio_rep, talk_ratio_customer = self._calculate_talk_ratios(transcript_segments)
+        talk_ratio_rep, talk_ratio_customer = self._calculate_talk_ratios(
+            transcript_segments
+        )
         coaching_notes = "\n".join(response.coaching_recommendations)
         category_score_details = [
             category_score.model_dump()

@@ -1,4 +1,4 @@
-from pydantic import BaseModel, ConfigDict, Field, model_validator
+from pydantic import AliasChoices, BaseModel, ConfigDict, Field, model_validator
 
 
 class Evidence(BaseModel):
@@ -7,8 +7,13 @@ class Evidence(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
     evidence: str
-    timestamp: float = Field(ge=0.0)
-    supporting_quote: str
+    timestamp: float = Field(default=0.0, ge=0.0)
+    speaker: str = "Unknown"
+    confidence: float = Field(default=0.0, ge=0.0, le=1.0)
+    supporting_quote: str = Field(
+        default="",
+        validation_alias=AliasChoices("supporting_quote", "quote"),
+    )
 
 
 class CategoryScore(BaseModel):
@@ -24,7 +29,9 @@ class CategoryScore(BaseModel):
     @model_validator(mode="after")
     def require_evidence(self) -> "CategoryScore":
         if not self.evidence:
-            raise ValueError("each category score must include at least one evidence item.")
+            raise ValueError(
+                "each category score must include at least one evidence item."
+            )
         return self
 
 

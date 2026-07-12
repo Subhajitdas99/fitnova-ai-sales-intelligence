@@ -24,7 +24,9 @@ def render_call_detail(call_payload: dict[str, Any]) -> None:
     st.write(
         f"**Coaching Notes:** {call_payload.get('coaching_notes') or 'Not available yet.'}"
     )
-    st.write(f"**Next Steps:** {call_payload.get('next_steps') or 'Not available yet.'}")
+    st.write(
+        f"**Next Steps:** {call_payload.get('next_steps') or 'Not available yet.'}"
+    )
 
     st.divider()
 
@@ -70,7 +72,9 @@ def _render_scorecard(scorecard: dict[str, Any] | None) -> None:
         )
 
     for category_score in category_scores:
-        category = str(category_score.get("category", "Unknown")).replace("_", " ").title()
+        category = (
+            str(category_score.get("category", "Unknown")).replace("_", " ").title()
+        )
         score = float(category_score.get("score", 0))
         confidence = float(category_score.get("confidence", 0))
         st.markdown(f"**{category}: {score:.0f}/100**")
@@ -83,7 +87,9 @@ def _build_scorecard_radar_chart(category_scores: list[dict[str, Any]]) -> go.Fi
         str(category_score.get("category", "Unknown")).replace("_", " ").title()
         for category_score in category_scores
     ]
-    scores = [float(category_score.get("score", 0)) for category_score in category_scores]
+    scores = [
+        float(category_score.get("score", 0)) for category_score in category_scores
+    ]
     if categories:
         categories.append(categories[0])
         scores.append(scores[0])
@@ -111,13 +117,17 @@ def _render_evidence_items(evidence_items: list[dict[str, Any]]) -> None:
         st.caption("No evidence captured for this score.")
         return
 
-    for evidence in evidence_items:
+    for index, evidence in enumerate(evidence_items, start=1):
         timestamp = float(evidence.get("timestamp", 0))
-        st.caption(f"{timestamp:.1f}s")
-        st.write(evidence.get("evidence", ""))
-        quote = evidence.get("supporting_quote")
-        if quote:
-            st.info(f'"{quote}"')
+        speaker = evidence.get("speaker", "Unknown")
+        confidence = float(evidence.get("confidence", 0))
+        with st.expander(f"Evidence {index} at {timestamp:.1f}s"):
+            st.write(f"**Speaker:** {speaker}")
+            st.write(f"**Confidence:** {confidence:.0%}")
+            st.write(f"**Evidence:** {evidence.get('evidence', '')}")
+            quote = evidence.get("supporting_quote")
+            if quote:
+                st.info(f'"{quote}"')
 
 
 def _render_issues_and_recommendations(call_payload: dict[str, Any]) -> None:
@@ -167,7 +177,11 @@ def _render_conversation(transcript_segments: list[dict[str, Any]]) -> None:
 
     for segment in transcript_segments:
         speaker = (segment.get("speaker") or "Unknown").strip()
-        role = "assistant" if speaker.lower() in {"sales rep", "sales advisor", "advisor"} else "user"
+        role = (
+            "assistant"
+            if speaker.lower() in {"sales rep", "sales advisor", "advisor"}
+            else "user"
+        )
         with st.chat_message(role):
             st.markdown(f"**{speaker}**")
             st.write(segment.get("text", ""))

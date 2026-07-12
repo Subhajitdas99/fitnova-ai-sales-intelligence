@@ -15,7 +15,11 @@ from tenacity import (
 
 from backend.app.application.dto.transcription_result import TranscriptionResult
 from backend.app.application.interfaces.services import TranscriptionServiceProtocol
-from backend.app.core.exceptions import ApplicationError, ExternalServiceError, ServiceConfigurationError
+from backend.app.core.exceptions import (
+    ApplicationError,
+    ExternalServiceError,
+    ServiceConfigurationError,
+)
 from backend.app.domain.entities.transcript import TranscriptSegment
 
 
@@ -42,7 +46,9 @@ class WhisperTranscriptionService(TranscriptionServiceProtocol):
         self._model_lock = Lock()
         self._logger = logging.getLogger(__name__)
 
-    def transcribe(self, audio_path: Path, language: str | None = None) -> TranscriptionResult:
+    def transcribe(
+        self, audio_path: Path, language: str | None = None
+    ) -> TranscriptionResult:
         resolved_audio_path = audio_path.expanduser().resolve()
         normalized_language = self._normalize_language(language)
         self._logger.info(
@@ -62,8 +68,12 @@ class WhisperTranscriptionService(TranscriptionServiceProtocol):
                 f"Whisper returned no transcript segments for '{resolved_audio_path.name}'."
             )
 
-        detected_language = str(result.get("language") or normalized_language or "unknown").lower()
-        average_confidence = sum(segment.confidence for segment in segments) / len(segments)
+        detected_language = str(
+            result.get("language") or normalized_language or "unknown"
+        ).lower()
+        average_confidence = sum(segment.confidence for segment in segments) / len(
+            segments
+        )
         self._logger.info(
             "Whisper transcription completed for %s with %s segments, detected language '%s', average confidence %.4f",
             resolved_audio_path,
@@ -76,7 +86,9 @@ class WhisperTranscriptionService(TranscriptionServiceProtocol):
             segments=segments,
         )
 
-    def _transcribe_with_retry(self, audio_path: Path, language: str | None) -> dict[str, Any]:
+    def _transcribe_with_retry(
+        self, audio_path: Path, language: str | None
+    ) -> dict[str, Any]:
         for attempt in Retrying(
             stop=stop_after_attempt(self._retry_attempts),
             wait=wait_fixed(self._retry_delay_seconds),
@@ -91,7 +103,9 @@ class WhisperTranscriptionService(TranscriptionServiceProtocol):
                     attempt_number=attempt.retry_state.attempt_number,
                 )
 
-        raise ExternalServiceError(f"Whisper transcription failed for '{audio_path.name}'.")
+        raise ExternalServiceError(
+            f"Whisper transcription failed for '{audio_path.name}'."
+        )
 
     def _transcribe_once(
         self,
@@ -143,7 +157,9 @@ class WhisperTranscriptionService(TranscriptionServiceProtocol):
                     resolved_device,
                 )
                 try:
-                    self._model = whisper.load_model(self._model_size, device=resolved_device)
+                    self._model = whisper.load_model(
+                        self._model_size, device=resolved_device
+                    )
                 except Exception as exc:  # pragma: no cover - runtime dependency
                     raise ServiceConfigurationError(
                         f"Unable to load Whisper model '{self._model_size}': {exc}"
