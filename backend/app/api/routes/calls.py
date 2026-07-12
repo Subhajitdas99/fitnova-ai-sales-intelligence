@@ -71,7 +71,7 @@ async def upload_call(
     )
 
 
-@router.get("/", response_model=list[CallListItemResponse])
+@router.get("", response_model=list[CallListItemResponse])
 def list_calls(
     status_filter: CallStatus | None = None,
     limit: int = 50,

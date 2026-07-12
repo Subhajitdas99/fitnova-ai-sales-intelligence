@@ -4,16 +4,16 @@ import requests
 import streamlit as st
 from dotenv import load_dotenv
 
-from frontend.components.analytics import render_analytics_dashboard
-from frontend.components.coaching import render_coaching_dashboard
-from frontend.components.detail import render_call_detail
-from frontend.components.executive import (
+from components.analytics import render_analytics_dashboard
+from components.coaching import render_coaching_dashboard
+from components.detail import render_call_detail
+from components.executive import (
     render_advisor_performance,
     render_executive_dashboard,
 )
-from frontend.components.metrics import render_overview_metrics
-from frontend.components.tables import render_calls_table
-from frontend.services.api_client import FitNovaApiClient
+from components.metrics import render_overview_metrics
+from components.tables import render_calls_table
+from services.api_client import FitNovaApiClient
 
 # ---------------------------------------------------------
 # Load environment variables
@@ -30,8 +30,8 @@ def get_backend_url() -> str:
     3. Local Default
     """
 
-    # 1. Environment Variable
-    env_url = os.getenv("BACKEND_URL")
+    # 1. Environment Variable — canonical name used in .env
+    env_url = os.getenv("FITNOVA_STREAMLIT_BACKEND_URL") or os.getenv("BACKEND_URL")
     if env_url:
         return env_url
 
