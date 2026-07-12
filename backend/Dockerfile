@@ -32,6 +32,8 @@ COPY .env.example ./.env.example
 RUN mkdir -p /app/backend/storage/audio && \
     chown -R fitnova:fitnova /app
 
+VOLUME ["/app/backend/storage"]
+
 USER fitnova
 
 EXPOSE 8000

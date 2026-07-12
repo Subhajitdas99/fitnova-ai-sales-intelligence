@@ -9,8 +9,15 @@ services:
     ports:
       - "8000:8000"
     volumes:
-      - ./backend/storage:/app/backend/storage
+      - backend_storage:/app/backend/storage
       - ./backend:/app/backend
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/health/live', timeout=3)"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 20s
+    restart: unless-stopped
 
   frontend:
     build:
@@ -24,4 +31,9 @@ services:
     volumes:
       - ./frontend:/app/frontend
     depends_on:
-      - backend
+      backend:
+        condition: service_healthy
+    restart: unless-stopped
+
+volumes:
+  backend_storage:
