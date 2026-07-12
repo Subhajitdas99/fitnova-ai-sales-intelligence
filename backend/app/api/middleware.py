@@ -13,7 +13,7 @@ logger = logging.getLogger(__name__)
 
 
 class RequestContextMiddleware(BaseHTTPMiddleware):
-    """Attach request id, timing and structured access logs."""
+    """Attach request ids, timing, and access logs to every request."""
 
     async def dispatch(
         self,
@@ -22,11 +22,9 @@ class RequestContextMiddleware(BaseHTTPMiddleware):
     ) -> Response:
         request_id = request.headers.get("X-Request-ID") or str(uuid4())
 
-        request.state.request_id = request_id
-
         token = request_id_context.set(request_id)
 
-        start = time.perf_counter()
+        start_time = time.perf_counter()
         status_code = status.HTTP_500_INTERNAL_SERVER_ERROR
 
         try:
@@ -41,25 +39,25 @@ class RequestContextMiddleware(BaseHTTPMiddleware):
             logger.exception(
                 "Unhandled request exception",
                 extra={
-                    "request_id": request_id,
                     "endpoint": request.url.path,
                     "method": request.method,
                     "status_code": status_code,
+                    "request_id": request_id,
                 },
             )
             raise
 
         finally:
-            duration_ms = round((time.perf_counter() - start) * 1000, 2)
+            duration_ms = round((time.perf_counter() - start_time) * 1000, 2)
 
             logger.info(
                 "HTTP request completed",
                 extra={
-                    "request_id": request_id,
                     "endpoint": request.url.path,
                     "method": request.method,
                     "status_code": status_code,
                     "duration_ms": duration_ms,
+                    "request_id": request_id,
                 },
             )
 
@@ -67,7 +65,7 @@ class RequestContextMiddleware(BaseHTTPMiddleware):
 
 
 class SecurityHeadersMiddleware(BaseHTTPMiddleware):
-    """Apply baseline browser security headers."""
+    """Apply baseline browser and proxy security headers."""
 
     async def dispatch(
         self,
@@ -79,10 +77,7 @@ class SecurityHeadersMiddleware(BaseHTTPMiddleware):
         response.headers.setdefault("X-Content-Type-Options", "nosniff")
         response.headers.setdefault("X-Frame-Options", "DENY")
         response.headers.setdefault("Referrer-Policy", "no-referrer")
-        response.headers.setdefault(
-            "X-Permitted-Cross-Domain-Policies",
-            "none",
-        )
+        response.headers.setdefault("X-Permitted-Cross-Domain-Policies", "none")
 
         return response
 
@@ -90,7 +85,7 @@ class SecurityHeadersMiddleware(BaseHTTPMiddleware):
 class RequestTimeoutMiddleware(BaseHTTPMiddleware):
     """Abort requests that exceed the configured timeout."""
 
-    def __init__(self, app, timeout_seconds: float = 30.0):
+    def __init__(self, app, timeout_seconds: float):
         super().__init__(app)
         self.timeout_seconds = timeout_seconds
 
@@ -99,7 +94,7 @@ class RequestTimeoutMiddleware(BaseHTTPMiddleware):
         request: Request,
         call_next: RequestResponseEndpoint,
     ) -> Response:
-        request_id = getattr(request.state, "request_id", None)
+        request_id = request.headers.get("X-Request-ID") or str(uuid4())
 
         try:
             response = await asyncio.wait_for(
@@ -107,34 +102,31 @@ class RequestTimeoutMiddleware(BaseHTTPMiddleware):
                 timeout=self.timeout_seconds,
             )
 
+            response.headers.setdefault("X-Request-ID", request_id)
+
             return response
 
         except asyncio.TimeoutError:
             logger.warning(
                 "HTTP request timed out",
                 extra={
-                    "request_id": request_id,
                     "endpoint": request.url.path,
                     "method": request.method,
                     "status_code": status.HTTP_504_GATEWAY_TIMEOUT,
+                    "request_id": request_id,
                 },
             )
 
-            response = JSONResponse(
+            return JSONResponse(
                 status_code=status.HTTP_504_GATEWAY_TIMEOUT,
                 content={
-                    "success": False,
                     "error": {
-                        "code": "REQUEST_TIMEOUT",
+                        "code": "request_timeout",
                         "message": "Request exceeded the configured timeout.",
-                    },
+                        "request_id": request_id,
+                    }
+                },
+                headers={
+                    "X-Request-ID": request_id,
                 },
             )
-
-            if request_id:
-                response.headers["X-Request-ID"] = request_id
-
-            return response
-
-        except Exception:
-            raise

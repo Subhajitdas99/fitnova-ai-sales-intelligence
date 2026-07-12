@@ -33,7 +33,7 @@ _RESERVED_LOG_RECORD_FIELDS = {
 
 
 class JsonLogFormatter(logging.Formatter):
-    """Format application logs as compact JSON records."""
+    """Format application logs as structured JSON."""
 
     def format(self, record: logging.LogRecord) -> str:
         payload: dict[str, Any] = {
@@ -44,7 +44,8 @@ class JsonLogFormatter(logging.Formatter):
             "level": record.levelname,
             "logger": record.name,
             "message": record.getMessage(),
-            "request_id": getattr(record, "request_id", None) or get_request_id(),
+            "request_id": getattr(record, "request_id", None)
+            or get_request_id(),
         }
 
         for key, value in record.__dict__.items():
@@ -57,12 +58,30 @@ class JsonLogFormatter(logging.Formatter):
         return json.dumps(payload, default=str, separators=(",", ":"))
 
 
-def configure_logging(log_level: str) -> None:
-    """Configure application-wide logging."""
+def configure_logging(log_level: str = "INFO") -> None:
+    """Configure application-wide JSON logging."""
 
     handler = logging.StreamHandler()
     handler.setFormatter(JsonLogFormatter())
 
     root_logger = logging.getLogger()
-    root_logger.handlers = [handler]
-    root_logger.setLevel(getattr(logging, log_level.upper(), logging.INFO))
+
+    # Prevent duplicate handlers on reload
+    root_logger.handlers.clear()
+    root_logger.addHandler(handler)
+
+    root_logger.setLevel(
+        getattr(logging, log_level.upper(), logging.INFO)
+    )
+
+    root_logger.propagate = False
+
+
+def get_logger(name: str) -> logging.Logger:
+    """
+    Return a configured logger instance.
+
+    This helper keeps logging consistent across the application
+    and is imported by backend.app.main and other modules.
+    """
+    return logging.getLogger(name)
