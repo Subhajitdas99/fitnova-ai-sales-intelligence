@@ -130,8 +130,8 @@ class OpenRouterCallIntelligenceService(CallIntelligenceServiceProtocol):
             f"Validation error: {error}\n"
             f"Rejected response: {invalid_content[:2000]}\n"
             "Return one corrected JSON object only."
-
         )
+
     def _to_call_analysis(
         self,
         response: LLMAnalysisResponse,
