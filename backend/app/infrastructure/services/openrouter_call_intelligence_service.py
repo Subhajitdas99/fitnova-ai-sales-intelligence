@@ -76,6 +76,7 @@ class OpenRouterCallIntelligenceService(CallIntelligenceServiceProtocol):
         )
 
     def _request_analysis(self, prompt: str, attempt: int) -> str:
+        """Send the prompt to OpenRouter and return the JSON response."""
         try:  # pragma: no cover - network dependency
             response = self._client.chat.completions.create(
                 model=self._model,
@@ -83,17 +84,36 @@ class OpenRouterCallIntelligenceService(CallIntelligenceServiceProtocol):
                 messages=[
                     {
                         "role": "system",
-                        "content": "Return strict JSON only. No markdown, prose, or code fences.",
+                        "content": (
+                            "You are an expert AI sales coach.\n"
+                            "Return ONLY one valid JSON object matching the required schema.\n"
+                            "Do NOT include markdown.\n"
+                            "Do NOT include explanations.\n"
+                            "Do NOT wrap the JSON inside code fences."
+                        ),
                     },
-                    {"role": "user", "content": prompt},
+                    {
+                        "role": "user",
+                        "content": prompt,
+                    },
                 ],
                 temperature=0.1,
+                max_tokens=6000,
             )
         except Exception as exc:  # pragma: no cover - network dependency
             raise ExternalServiceError(f"OpenRouter analysis failed: {exc}") from exc
 
-        content = response.choices[0].message.content or ""
-        logger.info("OpenRouter analysis response received on attempt %s", attempt)
+        if not response.choices:
+            raise ExternalServiceError("OpenRouter returned no completion choices.")
+
+        content = response.choices[0].message.content
+        if not content:
+            raise ExternalServiceError("OpenRouter returned an empty response.")
+
+        logger.info(
+            "OpenRouter analysis response received on attempt %s",
+            attempt,
+        )
         return content
 
     def _build_retry_prompt(
@@ -102,14 +122,16 @@ class OpenRouterCallIntelligenceService(CallIntelligenceServiceProtocol):
         invalid_content: str,
         error: Exception,
     ) -> str:
+        """Build a retry prompt after invalid JSON."""
         return (
             f"{original_prompt}\n\n"
-            "Your previous response was rejected because it was not valid JSON for the required schema.\n"
+            "Your previous response was rejected because it was not valid JSON "
+            "for the required schema.\n"
             f"Validation error: {error}\n"
             f"Rejected response: {invalid_content[:2000]}\n"
             "Return one corrected JSON object only."
-        )
 
+        )
     def _to_call_analysis(
         self,
         response: LLMAnalysisResponse,
